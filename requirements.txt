@@ -1,0 +1,13 @@
+# Datos de mercado
+yfinance>=0.2.40        # Fuente gratis (Yahoo Finance)
+requests>=2.31          # Para DataBursatil y noticias
+
+# Análisis
+pandas>=2.0
+numpy>=1.24
+
+# Noticias (RSS)
+feedparser>=6.0
+
+# Configuración
+python-dotenv>=1.0

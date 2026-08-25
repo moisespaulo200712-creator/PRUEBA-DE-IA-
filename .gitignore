@@ -1,0 +1,21 @@
+# Entorno / secretos
+.env
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Datos y reportes generados
+reportes/
+*.csv
+*.log
+
+# SO / editor
+.DS_Store
+.vscode/
+.idea/
