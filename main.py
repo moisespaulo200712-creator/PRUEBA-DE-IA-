@@ -12,7 +12,7 @@ import sys
 
 import config
 from agente_inversion.datos import obtener_proveedor
-from agente_inversion.agentes import oportunidades
+from agente_inversion.agentes import oportunidades, analista_ia
 from agente_inversion import alertas
 
 
@@ -37,6 +37,10 @@ def parse_args():
     p.add_argument(
         "--solo-oportunidades", action="store_true",
         help="Mostrar solo emisoras con señal o movimiento inusual",
+    )
+    p.add_argument(
+        "--ia", action="store_true",
+        help="Pedir a Claude un análisis global (requiere ANTHROPIC_API_KEY)",
     )
     return p.parse_args()
 
@@ -79,6 +83,13 @@ def main():
         print("\n🏆 RANKING DE OPORTUNIDADES:")
         for r in reportes:
             print(f"   {r['puntaje']:+d}  {r['emisora']:<14} {r['recomendacion']}")
+
+        # Análisis con Claude (opcional)
+        if args.ia:
+            print("\n🤖 ANÁLISIS DE CLAUDE:")
+            print("=" * 60)
+            print(analista_ia.analizar(reportes))
+            print("=" * 60)
 
 
 if __name__ == "__main__":

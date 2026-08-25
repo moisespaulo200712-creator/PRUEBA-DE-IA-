@@ -11,3 +11,6 @@ feedparser>=6.0
 
 # Configuración
 python-dotenv>=1.0
+
+# Análisis con IA (opcional, para la bandera --ia)
+anthropic>=0.40
