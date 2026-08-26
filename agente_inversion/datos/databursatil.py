@@ -47,6 +47,33 @@ def _a_emisora_serie(emisora: str) -> str:
     return e
 
 
+def _get_api(endpoint: str, token: str, **params) -> dict | list:
+    """Llamada GET genérica a la API de DataBursatil (para endpoints extra)."""
+    params["token"] = token
+    resp = requests.get(f"{_URL_BASE}/{endpoint}", params=params, timeout=30)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def obtener_noticias_api(token: str, limite: int = 10) -> list[dict]:
+    """Noticias del día del mercado MX. Cada item: {n: titulo, c: cuerpo, f: url}."""
+    datos = _get_api("noticias", token)
+    return datos[:limite] if isinstance(datos, list) else []
+
+
+def obtener_top(token: str, bolsa: str = "BMV", cantidad: int = 5,
+                mercado: str = "local") -> dict:
+    """Mayores alzas y bajas del día. Devuelve {'SUBEN': [...], 'BAJAN': [...]}.
+
+    Cada emisora: {e: clave, u: último precio, c: cambio %}.
+    """
+    datos = _get_api(
+        "top", token, variables="suben,bajan",
+        bolsa=bolsa, cantidad=cantidad, mercado=mercado,
+    )
+    return datos if isinstance(datos, dict) else {}
+
+
 class ProveedorDataBursatil(ProveedorDatos):
     nombre = "databursatil"
 

@@ -67,7 +67,7 @@ def analizar(reportes: list[dict], modelo: str = MODELO_DEFAULT) -> str:
     resumen = _resumir_reportes(reportes)
     resp = cliente.messages.create(
         model=modelo,
-        max_tokens=1200,
+        max_tokens=2500,
         system=_SYSTEM,
         messages=[{
             "role": "user",
@@ -77,4 +77,9 @@ def analizar(reportes: list[dict], modelo: str = MODELO_DEFAULT) -> str:
             ),
         }],
     )
-    return resp.content[0].text
+    # La respuesta puede traer bloques de "pensamiento" antes del texto;
+    # tomamos solo los bloques de tipo texto.
+    textos = [
+        b.text for b in resp.content if getattr(b, "type", None) == "text"
+    ]
+    return "\n".join(textos).strip() or "(Claude no devolvió texto.)"

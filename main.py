@@ -12,7 +12,7 @@ import sys
 
 import config
 from agente_inversion.datos import obtener_proveedor
-from agente_inversion.agentes import oportunidades, analista_ia
+from agente_inversion.agentes import oportunidades, analista_ia, mercado
 from agente_inversion import alertas, backtest
 
 
@@ -49,6 +49,10 @@ def parse_args():
     p.add_argument(
         "--horizonte", type=int, default=10,
         help="Backtest: días hacia adelante para medir el rendimiento (default: 10)",
+    )
+    p.add_argument(
+        "--sin-panorama", action="store_true",
+        help="No mostrar el panorama de mercado (alzas/bajas y noticias)",
     )
     return p.parse_args()
 
@@ -91,6 +95,16 @@ def main():
         print("\n🔬 MODO BACKTEST — probando las señales contra el pasado\n")
         correr_backtest(proveedor, emisoras, args)
         return
+
+    # Panorama de mercado (si hay token de DataBursatil).
+    if not args.sin_panorama:
+        try:
+            pan = mercado.panorama()
+            if pan:
+                print(mercado.formatear(pan))
+                print("=" * 60)
+        except Exception as e:
+            print(f"(No se pudo cargar el panorama de mercado: {e})")
 
     reportes = []
     for emisora in emisoras:
