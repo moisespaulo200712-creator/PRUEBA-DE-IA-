@@ -205,6 +205,20 @@ _HTML = r"""
   .news a{color:var(--txt);text-decoration:none}
   .news a:hover{color:var(--accent)}
   .sec-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:6px 0 12px}
+  .signals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:820px){.signals{grid-template-columns:1fr}}
+  .scol{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .scol.buy{border-top:3px solid var(--up)}
+  .scol.sell{border-top:3px solid var(--down)}
+  .scol.neu{border-top:3px solid var(--muted)}
+  .scol h3{margin:0 0 4px;font-size:14px}
+  .scol .hint{font-size:11px;color:var(--muted);margin-bottom:10px}
+  .srow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--panel2);font-size:14px}
+  .srow:last-child{border-bottom:none}
+  .srow .nm{font-weight:600}
+  .srow .sc{font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted)}
+  .srow .px{font-variant-numeric:tabular-nums}
+  .empty{font-size:12px;color:var(--muted);padding:8px 0}
   .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
   @media(max-width:820px){.cards{grid-template-columns:1fr}}
   .emi{background:var(--panel);border:1px solid var(--line);border-radius:14px;
@@ -264,7 +278,10 @@ _HTML = r"""
     </div>
   </div>
 
-  <div class="sec-title">📊 Tu watchlist · ordenada por señal</div>
+  <div class="sec-title">🎯 Señales de hoy · según el análisis técnico</div>
+  <div class="signals" id="signals"><div class="muted">Clasificando…</div></div>
+
+  <div class="sec-title" style="margin-top:20px">📊 Tu watchlist · detalle por emisora</div>
   <div class="cards" id="cards"><div class="muted">Analizando con datos reales de la BMV…</div></div>
 
   <div class="foot">
@@ -313,8 +330,26 @@ async function loadPanorama(){
   }catch(e){}
 }
 
+function renderSignals(arr){
+  const ok=arr.filter(e=>!e.error);
+  const buy=ok.filter(e=>e.puntaje>=1), neu=ok.filter(e=>e.puntaje===0), sell=ok.filter(e=>e.puntaje<=-1);
+  const px=e=>`$${e.live_precio!=null?e.live_precio:e.precio}`;
+  const rows=list=> list.length? list.map(e=>
+    `<div class="srow"><span class="nm">${e.emisora}</span>
+       <span><span class="sc">${e.puntaje>=0?"+":""}${e.puntaje}</span> &nbsp;<span class="px">${px(e)}</span></span></div>`).join("")
+    : '<div class="empty">— ninguna hoy —</div>';
+  document.getElementById("signals").innerHTML=`
+    <div class="scol buy"><h3 class="up">📗 Señal de COMPRA</h3>
+      <div class="hint">Sesgo alcista (📈). El técnico ve fuerza para subir.</div>${rows(buy)}</div>
+    <div class="scol neu"><h3>⚪ SIN señal clara</h3>
+      <div class="hint">El agente dice "esperar / no hay razón para mover".</div>${rows(neu)}</div>
+    <div class="scol sell"><h3 class="down">📕 Señal de VENTA / precaución</h3>
+      <div class="hint">Sesgo bajista (📉). El técnico ve debilidad.</div>${rows(sell)}</div>`;
+}
+
 async function loadEmisoras(){
   try{ const arr=await (await fetch("/api/emisoras")).json();
+    renderSignals(arr);
     document.getElementById("cards").innerHTML=arr.map(e=>{
       if(e.error) return `<div class="emi"><div class="emi-name">${e.emisora}</div><div class="sig">⚠️ ${e.error}</div></div>`;
       const strong=e.puntaje>=3;
