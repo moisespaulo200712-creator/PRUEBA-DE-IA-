@@ -13,7 +13,7 @@ import sys
 import config
 from agente_inversion.datos import obtener_proveedor
 from agente_inversion.agentes import oportunidades, analista_ia
-from agente_inversion import alertas
+from agente_inversion import alertas, backtest
 
 
 def parse_args():
@@ -42,7 +42,30 @@ def parse_args():
         "--ia", action="store_true",
         help="Pedir a Claude un análisis global (requiere ANTHROPIC_API_KEY)",
     )
+    p.add_argument(
+        "--backtest", action="store_true",
+        help="Medir qué tan seguido acertaron las señales en el pasado",
+    )
+    p.add_argument(
+        "--horizonte", type=int, default=10,
+        help="Backtest: días hacia adelante para medir el rendimiento (default: 10)",
+    )
     return p.parse_args()
+
+
+def correr_backtest(proveedor, emisoras, args):
+    """Modo backtest: evalúa históricamente las señales de cada emisora."""
+    # El backtest necesita bastante historia; pedimos al menos ~1.5 años.
+    dias = max(args.dias, 400)
+    for emisora in emisoras:
+        try:
+            df = proveedor.historico(emisora, dias=dias)
+            resultado = backtest.correr(emisora, df, horizonte=args.horizonte)
+            print(backtest.formatear(resultado))
+            print("-" * 60)
+        except Exception as e:
+            print(f"⚠️  {emisora}: no se pudo hacer backtest ({e})")
+            print("-" * 60)
 
 
 def main():
@@ -63,6 +86,11 @@ def main():
     except ValueError as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+    if args.backtest:
+        print("\n🔬 MODO BACKTEST — probando las señales contra el pasado\n")
+        correr_backtest(proveedor, emisoras, args)
+        return
 
     reportes = []
     for emisora in emisoras:
