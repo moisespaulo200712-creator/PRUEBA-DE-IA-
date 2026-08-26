@@ -12,7 +12,7 @@ import sys
 
 import config
 from agente_inversion.datos import obtener_proveedor
-from agente_inversion.agentes import oportunidades, analista_ia, mercado
+from agente_inversion.agentes import oportunidades, analista_ia, mercado, fundamental
 from agente_inversion import alertas, backtest
 
 
@@ -53,6 +53,10 @@ def parse_args():
     p.add_argument(
         "--sin-panorama", action="store_true",
         help="No mostrar el panorama de mercado (alzas/bajas y noticias)",
+    )
+    p.add_argument(
+        "--fundamental", action="store_true",
+        help="Mostrar análisis fundamental (ingresos, utilidad, deuda, crecimiento)",
     )
     return p.parse_args()
 
@@ -115,6 +119,12 @@ def main():
             )
             reportes.append(reporte)
             alertas.notificar(reporte, solo_oportunidades=args.solo_oportunidades)
+            if args.fundamental:
+                try:
+                    print(fundamental.formatear(fundamental.analizar(emisora)))
+                    print("-" * 60)
+                except Exception as e:
+                    print(f"   (fundamental no disponible: {e})")
         except Exception as e:
             print(f"⚠️  {emisora}: no se pudo analizar ({e})")
             print("-" * 60)
